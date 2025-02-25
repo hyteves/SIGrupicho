@@ -5,6 +5,9 @@ import plotly.express as px
 # Carregar o arquivo atualizado
 df = pd.read_csv("ubs_atualizado.csv", sep=";")
 
+df["LATITUDE"] = df["LATITUDE"].str.replace(",", ".").astype(float)
+df["LONGITUDE"] = df["LONGITUDE"].str.replace(",", ".").astype(float)
+
 # Contar a frequência de UBS por estado
 df_freq = df['Nome_UF'].value_counts().reset_index()
 df_freq.columns = ['Estado', 'Frequência']
@@ -21,22 +24,30 @@ grafico = px.bar(df_freq, x='Estado', y='Frequência',
 st.plotly_chart(grafico)
 
 # Filtro para estados específicos
-estados = st.multiselect("Selecione os estados para tabela", df_freq['Estado'].unique(), key="multiselect_tabela")
+estados = st.multiselect("Selecione os estados", df_freq['Estado'].unique())
 if estados:
     df_filtrado = df[df['Nome_UF'].isin(estados)]
     st.write(df_filtrado)
-
-# Filtro para estados específicos (para o mapa)
-estados_mapa = st.multiselect("Selecione os estados para mapa", df_freq['Estado'].unique(), key="multiselect_mapa")
-if estados_mapa:
-    df_filtrado_mapa = df[df['Nome_UF'].isin(estados_mapa)]
-
-    # Mapa de dispersão para localização das UBS
-    mapa = px.scatter_geo(df_filtrado_mapa, lat='LATITUDE', lon='LONGITUDE', hover_name='Nome_UF', 
-                      title='Localização das UBS Selecionadas',
-                      scope='south america', 
-                      labels={'Nome_UF': 'Estado'})
-    mapa.update_geos(showcoastlines=True, coastlinecolor="Black", showland=True, landcolor="white")
-    st.plotly_chart(mapa)
 else:
-    st.write("Selecione um ou mais estados para visualizar as UBS no mapa.")
+    df_filtrado = df  # Exibir todos os estados se nenhum for selecionado
+
+
+# Criar o mapa de dispersão
+st.subheader("Mapa das Unidades Básicas de Saúde")
+
+fig_mapa = px.scatter_map(df_filtrado, 
+                             lat="LATITUDE", 
+                             lon="LONGITUDE", 
+                             hover_name="NOME", 
+                             hover_data={"Nome_Município": True, "Nome_UF": True, "LATITUDE": False, "LONGITUDE": False},
+                             color_discrete_sequence=["red"], 
+                             zoom=4, 
+                             height=500)
+
+# Configurar mapa com estilo
+fig_mapa.update_layout(mapbox_style="open-street-map", 
+                       mapbox_center={"lat": df["LATITUDE"].mean(), "lon": df["LONGITUDE"].mean()})
+
+st.plotly_chart(fig_mapa)
+st.subheader("Lista de todas as UBS do país")
+st.write(df)

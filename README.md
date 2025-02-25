@@ -44,7 +44,8 @@ pip install -r requirements.txt
 
 ### 4️⃣ Executar a aplicação
 ```bash
-c```
+streamlit run ubs_dashboard.py
+```
 
 ## 📦 Dependências
 As principais bibliotecas utilizadas no projeto são:
