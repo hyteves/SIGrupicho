@@ -25,3 +25,14 @@ estados = st.multiselect("Selecione os estados", df_freq['Estado'].unique())
 if estados:
     df_filtrado = df[df['Nome_UF'].isin(estados)]
     st.write(df_filtrado)
+
+# Criar um histograma que exiba a quantidade de UBS por município
+df_freq = df['Nome_UF'].value_counts().reset_index()
+df_freq.columns = ['Estado', 'Frequência']
+
+# Histograma da Quantidade de UBS por Município
+
+import plotly.express as px
+df = px.data.tips()
+fig = px.histogram(df, x="total_bill")
+fig.show()
