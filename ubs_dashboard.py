@@ -5,6 +5,10 @@ import plotly.express as px
 # Carregar o arquivo atualizado
 df = pd.read_csv("ubs_atualizado.csv", sep=";")
 
+# Ajuste nas colunas de latitude e longitude para conversão de tipos
+df["LATITUDE"] = df["LATITUDE"].str.replace(",", ".").astype(float)
+df["LONGITUDE"] = df["LONGITUDE"].str.replace(",", ".").astype(float)
+
 # Contar a frequência de UBS por estado
 df_freq = df['Nome_UF'].value_counts().reset_index()
 df_freq.columns = ['Estado', 'Frequência']
@@ -24,18 +28,26 @@ estados = st.multiselect("Selecione os estados", df_freq['Estado'].unique())
 if estados:
     df_filtrado = df[df['Nome_UF'].isin(estados)]
     st.write(df_filtrado)
+else:
+    df_filtrado = df  # Exibir todos os estados se nenhum for selecionado
 
+# Criar o mapa de dispersão
+st.subheader("Mapa das Unidades Básicas de Saúde")
 
+fig_mapa = px.scatter_map(df_filtrado, 
+                         lat="LATITUDE", 
+                         lon="LONGITUDE", 
+                         hover_name="NOME", 
+                         hover_data={"Nome_Município": True, "Nome_UF": True, "LATITUDE": False, "LONGITUDE": False},
+                         color_discrete_sequence=["red"], 
+                         zoom=4, 
+                         height=500)
 
-# Exercicio 1
+# Configurar mapa com estilo
+fig_mapa.update_layout(mapbox_style="open-street-map", 
+                       mapbox_center={"lat": df["LATITUDE"].mean(), "lon": df["LONGITUDE"].mean()})
 
-
-
-
-
-
-
-# Exercicio 2
+st.plotly_chart(fig_mapa)
 
 # Gráfico de Pizza - Distribuição de UBS por Estado
 grafico_pizza = px.pie(df_freq, names='Estado', values='Frequência',
@@ -43,11 +55,7 @@ grafico_pizza = px.pie(df_freq, names='Estado', values='Frequência',
                         hole=0.4)
 st.plotly_chart(grafico_pizza)
 
-
-
-#Exercicio 3
-
-# Contar a frequência de UBS por município
+# Exercicio 3 - Contar a frequência de UBS por município
 df_mun_freq = df['Nome_Município'].value_counts().reset_index()
 df_mun_freq.columns = ['Município', 'Frequência']
 
@@ -66,3 +74,7 @@ grafico_histograma = px.histogram(df_mun_filtrado, x='Município', y='Frequênci
                                   labels={'Município': 'Município', 'Frequência': 'Número de UBS'},
                                   text_auto=True)
 st.plotly_chart(grafico_histograma)
+
+# Exibir a lista de todas as UBS do país
+st.subheader("Lista de todas as UBS do país")
+st.write(df)
